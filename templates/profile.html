@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h3 class="mt-4" style="color: orange;"><i class="fas fa-cog"></i> Settings</h3>
+<div class="container mt-3">
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="alert-container">
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    {% endwith %}
+    
+    <div class="row flex-lg-nowrap">
+        <div class="col-12 col-lg-auto mb-3" style="width: 230px;">
+            <div class="card p-3">
+                <div class="e-navlist e-navlist--active-bg">
+                    <ul class="nav">
+                        <li class="nav-item"><a class="nav-link px-2 active" href="{{ url_for('profile_settings') }}"><i class="fa fa-fw fa-user-gear mr-1"></i><span> Account Settings</span></a></li>
+                        <li class="nav-item"><a class="nav-link px-2" href="{{ url_for('settings') }}"><i class="fa fa-fw fa-cog mr-1"></i><span> General</span></a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col">
+            <div class="row">
+                <div class="col mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="e-profile">
+                                <div class="row">
+                                    <div class="col-12 col-sm-auto mb-3">
+                                        <div class="profile-picture-wrapper position-relative">
+                                            <form action="{{ url_for('profile_settings') }}" method="POST" enctype="multipart/form-data">
+                                                <input type="file" id="profilePicture" name="profile_picture" accept="image/*" style="display: none;" onchange="previewProfilePicture()">
+                                                <img src="{{ url_for('static', filename=current_user.profile_picture or 'uploads/defaultpicture.png') }}" alt="Profile Picture" class="rounded-circle shadow" id="profilePicturePreview" style="width: 140px; height: 140px; object-fit: cover; cursor: pointer;" onclick="document.getElementById('profilePicture').click();">
+                                                <div class="hover-overlay d-flex align-items-center justify-content-center rounded-circle" onclick="document.getElementById('profilePicture').click();">
+                                                    <span class="text-white">Change Photo</span>
+                                                </div>
+                                        </div>
+                                    </div>
+                                    <div class="col d-flex flex-column justify-content-between mb-3">
+                                        <div class="text-left mb-2 mb-sm-0">
+                                            <h4 class="pt-sm-2 pb-1 mb-0 text-nowrap">{{ current_user.first_name }} {{ current_user.last_name }}</h4>
+                                            <p class="mb-0">@{{ current_user.username }}</p>
+                                        </div>
+                                        <div class="text-left mt-2">
+                                            <button class="btn btn-primary" type="submit">
+                                                <i class="fa fa-fw fa-camera"></i>
+                                                <span>Save Photo</span>
+                                            </button>
+                                        </div>
+                                            </form>
+                                    </div>
+                                </div>
+                                <ul class="nav nav-tabs">
+                                    <li class="nav-item"><a href="" class="active nav-link">Account Settings</a></li>
+                                </ul>
+                                <div class="tab-content pt-3">
+                                    <div class="tab-pane active">
+                                        <form class="form" id="profileForm" method="POST" action="{{ url_for('profile_settings') }}" novalidate="">
+                                            <div class="row">
+                                                <div class="col">
+                                                    <div class="row">
+                                                        <div class="col">
+                                                            <div class="form-group">
+                                                                <label>First Name</label>
+                                                                <input class="form-control" type="text" name="first_name" value="{{ current_user.first_name }}">
+                                                            </div>
+                                                        </div>
+                                                        <div class="col">
+                                                            <div class="form-group">
+                                                                <label>Last Name</label>
+                                                                <input class="form-control" type="text" name="last_name" value="{{ current_user.last_name }}">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col">
+                                                            
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-12 col-sm-6 mb-3">
+                                                    <div class="mb-2"><b>Change Password</b></div>
+                                                    <div class="row">
+                                                        <div class="col">
+                                                            <div class="form-group">
+                                                                <label>Current Password</label>
+                                                                <input class="form-control" type="password" name="current_password" placeholder="••••••">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col">
+                                                            <div class="form-group">
+                                                                <label>New Password</label>
+                                                                <input class="form-control" type="password" name="password" placeholder="••••••">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col">
+                                                            <div class="form-group">
+                                                                <label>Confirm <span class="d-none d-xl-inline">Password</span></label>
+                                                                <input class="form-control" type="password" name="confirm_password" placeholder="••••••">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col d-flex justify-content-end">
+                                                    <button class="btn btn-primary" type="submit">Save Changes</button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-3 mb-3">
+            <div class="card mb-3" style="max-width: 200px;">
+                <div class="card-body">
+                    <div class="px-xl-3">
+                        <button class="btn btn-secondary btn-block" style="width: 100%;" onclick="location.href='{{ url_for('logout') }}'">
+                            <i class="fa fa-sign-out"></i>
+                            <span>Logout</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.profile-picture-wrapper {
+    position: relative;
+    width: 140px;
+    height: 140px;
+}
+.hover-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 140px;
+    height: 140px;
+    background-color: rgba(0, 0, 0, 0.6);
+    color: white;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    border-radius: 50%;
+    cursor: pointer;
+}
+.profile-picture-wrapper:hover .hover-overlay {
+    opacity: 1;
+}
+</style>
+
+<script>
+function previewProfilePicture() {
+    const file = document.getElementById('profilePicture').files[0];
+    const reader = new FileReader();
+    reader.onloadend = function() {
+        document.getElementById('profilePicturePreview').src = reader.result;
+    }
+    if (file) {
+        reader.readAsDataURL(file);
+    } else {
+        document.getElementById('profilePicturePreview').src = "{{ url_for('static', filename='uploads/defaultpicture.png') }}";
+    }
+}
+</script>
+{% endblock %}

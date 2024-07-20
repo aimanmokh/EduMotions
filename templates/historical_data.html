@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .historical-data-header {
+        background-color: #F7F9FA; /* Light grey background */
+        padding: 35px 30px 15px;
+        margin: -30px -30px 20px;
+        display: flex;
+        align-items: center; /* Align items horizontally */
+        gap: 15px; /* Space between icon and text */
+    }
+
+    .historical-data-icon {
+        background: white;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 50px;
+        height: 50px;
+        border-radius: 5px; /* Small square rounded card */
+        font-size: 24px;
+    }
+
+    .historical-data-icon i {
+        font-size: 24px;      
+        background: -webkit-linear-gradient(45deg, #7d2ae8, orange); 
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .historical-data-header h4 {
+        color: #495057;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 0;
+    }
+
+    .historical-data-header p {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: grey;
+        margin: 5px 0 0 0;
+    }
+
+    .filters {
+        background-color: #FFFFFF; /* White background */
+        padding: 15px;
+        border-radius: 10px;
+        border: 1px solid #dee2e6;
+        width: 250px; /* Make the filter card smaller */
+        height: auto; /* Adjust the height to make the card shorter */
+        max-height: 350px; /* Set a maximum height for the card */
+        overflow-y: auto; /* Enable scrolling if content overflows */
+    }
+
+    .filters h5 {
+        color: #7d2ae8;
+        margin-bottom: 15px;
+    }
+
+    .filters .form-label {
+        font-weight: bold;
+        color: #495057;
+    }
+
+    .charts {
+        background-color: #FFFFFF;
+        padding: 20px;
+        border-radius: 10px;
+        border: 1px solid #dee2e6;
+        margin-top: 20px;
+        flex-grow: 1; /* Allow the chart section to grow */
+    }
+
+    .charts h4 {
+        color: #37319e;
+        margin-bottom: 20px;
+    }
+
+    .content-container {
+        display: flex;
+        gap: 20px; /* Space between filter card and chart section */
+    }
+
+    .btn-purple {
+        background-color: #7D2AE8;
+        border-color: #7D2AE8;
+        color: white;
+    }
+    
+    .btn-purple:hover {
+        background-color: #6b25c8;
+        border-color: #6b25c8;
+    }
+</style>
+
+<div class="historical-data-header">
+    <div class="historical-data-icon"><i class="fas fa-history"></i></div>
+    <div>
+        <h4>Historical Data</h4>
+        <p>Analyze student emotions over time.</p>
+    </div>
+</div>
+
+<div class="content-container">
+    <div class="charts mt-3 ">
+        <h4><i class="fas fa-chart-line"></i> Emotion Trends Over Time</h4>
+        <canvas id="trendChart"></canvas>
+    </div>
+
+    <div class="filters mt-3 shadow">
+        <h5><i class="fas fa-filter"></i> Filter Data</h5>
+        <label for="dateRangeSelect" class="form-label"><i class="fas fa-calendar-alt"></i> Date Range:</label>
+        <select id="dateRangeSelect" class="form-select form-select-sm mb-3" aria-label=".form-select-sm example">
+            <option value="today">Today</option>
+            <option value="yesterday">Yesterday</option>
+            <option value="last7days">Last 7 Days</option>
+            <option value="last30days">Last 30 Days</option>
+            <option value="thismonth">This Month</option>
+            <option value="lastmonth">Last Month</option>
+            <option value="custom">Custom Range</option>
+        </select>
+        <div id="customDateRange" style="display: none;">
+            <label for="startDate" class="form-label"><i class="fas fa-calendar-day"></i> Start Date:</label>
+            <input type="date" id="startDate" name="startDate" class="form-control form-control-sm mb-2">
+            <label for="endDate" class="form-label"><i class="fas fa-calendar-day"></i> End Date:</label>
+            <input type="date" id="endDate" name="endDate" class="form-control form-control-sm mb-2">
+        </div>
+        <button class="btn btn-purple btn-sm mt-3" id="applyFiltersButton"><i class="fas fa-check"></i> Apply Filters</button>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('trendChart').getContext('2d');
+        let trendChart;
+
+        const emotionColors = {
+            "Angry": "red",
+            "Disgust": "green",
+            "Fear": "blue",
+            "Sad": "purple",
+            "Happy": "yellow",
+            "Surprise": "orange",
+            "Neutral": "gray"
+        };
+
+        function fetchData(dateRange, startDate, endDate) {
+            let url = '/get_historical_data';
+            const params = new URLSearchParams();
+
+            if (dateRange) {
+                params.append('dateRange', dateRange);
+            } else if (startDate && endDate) {
+                params.append('startDate', startDate);
+                params.append('endDate', endDate);
+            }
+
+            fetch(`${url}?${params.toString()}`)
+                .then(response => response.json())
+                .then(data => renderChart(data))
+                .catch(error => console.error('Error fetching data:', error));
+        }
+
+        function formatTimestamp(timestamp) {
+            const date = new Date(timestamp);
+            const options = { day: 'numeric', month: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true };
+            return date.toLocaleString('en-US', options);
+        }
+
+        function renderChart(data) {
+            const labels = data.map(item => formatTimestamp(item.timestamp));
+            const datasets = [];
+
+            data.forEach(snapshot => {
+                Object.keys(snapshot).forEach(key => {
+                    if (key !== 'timestamp') {
+                        if (!datasets.some(ds => ds.label === key)) {
+                            datasets.push({
+                                label: key,
+                                data: [],
+                                fill: false,
+                                borderColor: emotionColors[key] || 'black',
+                                tension: 0.1
+                            });
+                        }
+                        const dataset = datasets.find(ds => ds.label === key);
+                        dataset.data.push(snapshot[key].average_intensity);
+                    }
+                });
+            });
+
+            if (trendChart) {
+                trendChart.destroy();
+            }
+
+            trendChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    },
+                    responsive: true,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const emotion = context.dataset.label;
+                                    const value = context.raw;
+                                    const total = context.chart.data.datasets.reduce((acc, dataset) => acc + dataset.data[context.dataIndex], 0);
+                                    const percentage = ((value / total) * 100).toFixed(2);
+                                    return `${emotion}: ${percentage}% (${value.toFixed(2)})`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function applyFilters() {
+            const dateRange = document.getElementById('dateRangeSelect').value;
+            if (dateRange === 'custom') {
+                const startDate = document.getElementById('startDate').value;
+                const endDate = document.getElementById('endDate').value;
+                fetchData(null, startDate, endDate);
+            } else {
+                fetchData(dateRange);
+            }
+        }
+
+        document.getElementById('dateRangeSelect').addEventListener('change', function() {
+            if (this.value === 'custom') {
+                document.getElementById('customDateRange').style.display = 'block';
+            } else {
+                document.getElementById('customDateRange').style.display = 'none';
+            }
+        });
+
+        document.getElementById('applyFiltersButton').addEventListener('click', function() {
+            applyFilters();
+        });
+
+        fetchData('last7days'); // Default to last 7 days on initial load
+    });
+</script>
+{% endblock %}

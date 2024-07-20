@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .help-header {
+        background-color: #F7F9FA; /* Light grey background */
+        padding: 35px 30px 15px;
+        margin: -30px -30px 20px;
+        display: flex;
+        align-items: center; /* Align items horizontally */
+        gap: 15px; /* Space between icon and text */
+    }
+
+    .help-icon {
+        background: white;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 50px;
+        height: 50px;
+        border-radius: 5px; /* Small square rounded card */
+        font-size: 24px;
+    }
+
+    .help-icon i {
+        font-size: 24px;      
+        background: -webkit-linear-gradient(45deg, #7d2ae8, orange); 
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .help-header h4 {
+        color: #495057;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 0;
+    }
+
+    .help-header p {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: grey;
+        margin: 5px 0 0 0;
+    }
+
+    .help-content {
+        background-color: #FFFFFF; /* White background */
+        padding: 20px;
+        border-radius: 10px;
+        border: 1px solid #dee2e6;
+    }
+
+    .help-content h5 {
+        color: #7d2ae8;
+        margin-bottom: 15px;
+    }
+
+    .help-content p {
+        margin-bottom: 10px;
+        color: #495057;
+    }
+
+    .help-content ul {
+        list-style-type: disc;
+        margin-left: 20px;
+    }
+
+    .help-content ol {
+        list-style-type: decimal;
+        margin-left: 20px;
+    }
+</style>
+
+<div class="help-header">
+    <div class="help-icon"><i class="fas fa-question-circle"></i></div>
+    <div>
+        <h4>Help & FAQ</h4>
+        <p>Find answers to common questions and learn how to use the system.</p>
+    </div>
+</div>
+
+<div class="help-content shadow">
+    <h5>How to Use the Live Feed</h5>
+    <p>To start and stop the live feed:</p>
+    <ul>
+        <li>Click the <strong>Start</strong> button (<i class="fas fa-play"></i>) to begin the live feed.</li>
+        <li>Click the <strong>Stop</strong> button (<i class="fas fa-stop"></i>) to end the live feed.</li>
+    </ul>
+    <p>To switch cameras, use the <strong>Settings</strong> button (<i class="fas fa-cog"></i>) in the control bar below the video feed. This will open a dropdown menu where you can select the desired camera.</p>
+    <p>To save or reset statistics:</p>
+    <ul>
+        <li>Click the <strong>Save</strong> button (<i class="fas fa-save"></i>) to save the current emotion statistics.</li>
+        <li>Click the <strong>Reset</strong> button (<i class="fas fa-redo"></i>) to reset the current emotion statistics.</li>
+    </ul>
+    <p>To view the live feed in fullscreen mode, click the <strong>Fullscreen</strong> button (<i class="fas fa-expand"></i>) in the control bar below the video feed.</p>
+    <p>In addition to these controls, the live feed interface provides the following features:</p>
+    <ul>
+        <li><strong>Teaching Suggestions:</strong> Real-time teaching suggestions based on detected emotions are displayed alongside the live feed to help you adjust your teaching strategies.</li>
+        <li><strong>Current Emotion Stats Table:</strong> This table displays a summary of detected emotions, including:
+            <ul>
+                <li><strong>Emotion:</strong> The type of detected emotion (e.g., Happy, Sad).</li>
+                <li><strong>Distribution (%):</strong> The percentage of time each emotion is detected.</li>
+                <li><strong>Intensity:</strong> The average intensity of each detected emotion.</li>
+                <li><strong>Last Updated:</strong> The timestamp of the last emotion detection update.</li>
+            </ul>
+        </li>
+    </ul>
+    
+    <h5>Filtering Historical Data</h5>
+    <p>To filter historical data:</p>
+    <ul>
+        <li>Go to the <strong>Historical Data</strong> section.</li>
+        <li>Use the <strong>Filter Data</strong> card on the right side to select a date range.</li>
+        <li>Choose a predefined date range or select <strong>Custom Range</strong> to specify start and end dates.</li>
+        <li>Click the <strong>Apply Filters</strong> button to refresh the data based on the selected date range.</li>
+    </ul>
+
+    <h5>Viewing Emotion Trends Over Time</h5>
+    <p>The <strong>Emotion Trends Over Time</strong> chart displays the trends of different emotions detected over the selected time period. The data is color-coded by emotion for easy reference.</p>
+
+    <h5>Using the Dashboard</h5>
+    <p>The dashboard provides an overview of real-time and historical emotion data. Here's how to use it:</p>
+    <ul>
+        <li><strong>Emotion Distribution:</strong> Displays the percentage distribution of detected emotions.</li>
+        <li><strong>Emotion Intensity:</strong> Shows the average intensity of each detected emotion.</li>
+        <li><strong>Emotion Scores:</strong> Combines distribution and intensity to give a score for each emotion.</li>
+        <li><strong>Teaching Adjustment Suggestions:</strong> Provides suggestions to adjust teaching strategies based on detected emotions.</li>
+    </ul>
+
+    <h5>Profile and Settings</h5>
+    <p>To manage your profile and settings:</p>
+    <ul>
+        <li>Click on your profile picture in the top right corner to access your profile settings.</li>
+        <li>From the profile settings, you can update your personal information and change your profile picture.</li>
+        <li>Use the <strong>Settings</strong> option in the dropdown menu to access additional settings and preferences.</li>
+    </ul>
+</div>
+
+<div class="help-content shadow mt-4">
+    <h5>Comprehensive User Guide</h5>
+    <ol>
+        <li><strong>Navigating the Dashboard:</strong> The main dashboard provides an overview of student emotions, displayed through various graphs and indicators.
+            <ul>
+                <li><strong>Emotion Stats:</strong> View detailed statistics on the distribution and intensity of detected emotions. This includes:
+                    <ul>
+                        <li><strong>Emotion Distribution:</strong> A doughnut chart showing the percentage distribution of each detected emotion.</li>
+                        <li><strong>Emotion Intensity:</strong> A bar graph showing the average intensity of each detected emotion.</li>
+                        <li><strong>Emotion Scores:</strong> A horizontal bar chart displaying a weighted score for each emotion, calculated by multiplying the distribution percentage by the average intensity. Hover over the info icon for detailed calculation methods.</li>
+                    </ul>
+                </li>
+                <li><strong>Teaching Suggestions:</strong> Provides real-time suggestions for teaching adjustments based on the detected emotions. The suggestions are displayed in a styled container for better visibility.</li>
+            </ul>
+        </li>
+        <li><strong>Viewing Live Feed:</strong> The live feed shows real-time streaming of the classroom, with emotional overlays indicating the predominant emotions detected among students.
+            <ul>
+                <li>Access the live feed by selecting the 'Live Feed' tab from the navigation menu.</li>
+                <li>Use the <strong>Settings</strong> button (<i class="fas fa-cog"></i>) in the control bar below the video feed to switch cameras.</li>
+                <li>Use the controls to start or stop the live feed and manage the emotion statistics.</li>
+                <li><strong>Teaching Suggestions on Live Feed:</strong> Real-time teaching suggestions based on detected emotions are displayed alongside the live feed.</li>
+                <li><strong>Current Emotion Stats Table:</strong> Displays a table with the following columns:
+                    <ul>
+                        <li><strong>Emotion:</strong> The type of detected emotion (e.g., Happy, Sad).</li>
+                        <li><strong>Distribution (%):</strong> The percentage of time each emotion is detected.</li>
+                        <li><strong>Intensity:</strong> The average intensity of each detected emotion.</li>
+                        <li><strong>Last Updated:</strong> The timestamp of the last emotion detection update.</li>
+                    </ul>
+                </li>
+            </ul>
+        </li>
+        <li><strong>Using Historical Data:</strong> Access historical data to view past emotion trends and compare different sessions or dates.
+            <ul>
+                <li>Select the 'Historical Data' tab from the navigation menu.</li>
+                <li>Use the filters to select specific dates or periods for which you want to view the data.</li>
+                <li>Available date range options include Last 7 Days, Last 30 Days, This Month, Last Month, Today, Yesterday, and Custom Range.</li>
+            </ul>
+        </li>
+        <li><strong>Adjusting Settings:</strong> Customize settings such as selecting the camera under the 'Settings' menu. Save your settings using the 'Save Settings' button to refresh the camera feed with the new settings.</li>
+        <li><strong>Seeking Help:</strong> For further assistance, use the 'Help' section or contact support directly through the provided contact details.</li>
+    </ol>
+</div>
+
+<div class="help-content shadow mt-4">
+    <h5>Frequently Asked Questions</h5>
+    <dl>
+        <dt>How does the system detect student emotions?</dt>
+        <dd>The system uses advanced facial recognition technology combined with machine learning algorithms to analyze video feeds and detect emotions based on facial expressions.</dd>
+        <dt>How are Emotion Scores Calculated?</dt>
+        <dd>The emotion score is calculated using a combination of the distribution and intensity of detected emotions. Here is a detailed explanation:
+            <ul>
+                <li><strong>Emotion Detection:</strong> The system continuously analyzes the video feed to detect faces and recognize emotions using a trained machine learning model.</li>
+                <li><strong>Distribution Calculation:</strong> For each detected emotion, the system calculates the distribution, which is the percentage of time a particular emotion is detected relative to the total detection time.</li>
+                <li><strong>Intensity Calculation:</strong> The intensity of an emotion is determined by the confidence level of the emotion recognition model. Higher confidence indicates higher intensity.</li>
+                <li><strong>Score Computation:</strong> The final emotion score is computed by multiplying the distribution percentage by the average intensity of each detected emotion. This gives a weighted score that reflects both how frequently an emotion is detected and how intense it is.</li>
+                <li><strong>Example Calculation:</strong> If the system detects 'Happy' for 40% of the time with an average intensity of 0.8, and 'Sad' for 20% of the time with an average intensity of 0.6, the scores would be:
+                    <ul>
+                        <li>Happy Score = 40% * 0.8 = 32</li>
+                        <li>Sad Score = 20% * 0.6 = 12</li>
+                    </ul>
+                </li>
+            </ul>
+        </dd>
+        
+        <dt>How accurate is the emotion detection?</dt>
+        <dd>The accuracy of emotion detection depends on several factors, including the quality of the video feed, lighting conditions, and the clarity of facial expressions. The system uses a trained machine learning model, which is constantly improved to enhance accuracy.</dd>
+        
+        <dt>What types of emotions can the system detect?</dt>
+        <dd>The system can detect a range of emotions including Happy, Sad, Angry, Disgust, Fear, Surprise, and Neutral. Each emotion is analyzed based on facial expressions captured in the video feed.</dd>
+
+        
+        <dt>What should I do if the live feed is not working?</dt>
+        <dd>If the live feed is not working, try the following troubleshooting steps:
+            <ul>
+                <li>Ensure your camera is connected and functioning properly.</li>
+                <li>Check your internet connection.</li>
+                <li>Restart the system.</li>
+                <li>If the issue persists, contact support for further assistance.</li>
+            </ul>
+        </dd>
+    </dl>
+</div>
+{% endblock %}

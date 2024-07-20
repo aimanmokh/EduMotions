@@ -1,0 +1,606 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .live-feed-layout {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+    }
+
+    .video-container {
+        flex: 2;
+        position: relative;
+        height: 445px; /* Set a fixed height to match the suggestion container */
+        margin-right: 20px; /* Add margin to the right to separate from the suggestions */
+    }
+
+    .video-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 15px; /* Rounded corners */
+        border: 1px solid #dee2e6; /* Border for better visibility */
+    }
+
+    .suggestions-container {
+        flex: 1;
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 15px; /* Rounded corners */
+        padding: 20px;
+        max-height: 445px; /* Set a maximum height */
+        display: flex;
+        flex-direction: column;
+    }
+
+    .suggestions-header {
+        flex: 0 0 auto;
+    }
+
+    .suggestions-content {
+        flex: 1 1 auto;
+        overflow-y: auto; /* Enable scrolling if content overflows */
+    }
+
+    .suggestions-container h3,
+    .suggestions-container p {
+        display: flex;
+        align-items: center;
+        gap: 10px; /* Space between icon and text */
+        margin: 0;
+        color: #495057; /* Text color */
+    }
+
+    .suggestions-container h3 {
+        margin-bottom: 15px; /* Space below the title */
+        font-size: 24px; /* Title font size */
+    }
+
+    .suggestions-container p {
+        color: grey; /* Note text color */
+    }
+
+    .suggestions-container i {
+        background: -webkit-linear-gradient(45deg, #7d2ae8, orange);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .suggestion {
+        margin-bottom: 15px;
+        padding: 10px;
+        background-color: #e9ecef;
+        border-radius: 5px;
+        border-left: 5px solid;
+    }
+
+    .suggestion.angry {
+        border-color: #ff0000;
+    }
+
+    .suggestion.disgust {
+        border-color: #008000;
+    }
+
+    .suggestion.fear {
+        border-color: #0000ff;
+    }
+
+    .suggestion.happy {
+        border-color: #ffff00;
+    }
+
+    .suggestion.neutral {
+        border-color: #808080;
+    }
+
+    .suggestion.sad {
+        border-color: #800080;
+    }
+
+    .suggestion.surprise {
+        border-color: #ffa500;
+    }
+
+    .controls {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        padding: 10px;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent); /* Semi-transparent gradient background */
+        opacity: 1;
+        transition: opacity 0.3s ease;
+        border-bottom-left-radius: 15px; /* Match the video frame */
+        border-bottom-right-radius: 15px; /* Match the video frame */
+    }
+
+    .video-container.controls-hidden:hover .controls {
+        opacity: 1;
+    }
+
+    .video-container.controls-visible .controls {
+        opacity: 1;
+    }
+
+    .video-container.controls-hidden .controls {
+        opacity: 0;
+    }
+
+    .controls-left,
+    .controls-right {
+        display: flex;
+        gap: 10px;
+    }
+
+    .controls button {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        background: none;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        padding: 5px 10px;
+        transition: background-color 0.3s ease, border-color 0.3s ease;
+        position: relative;
+    }
+
+    .controls button:hover {
+        background-color: rgba(255, 255, 255, 0.2);
+        border-color: #ffc107;
+    }
+
+    .controls button[data-tooltip]:hover::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 5px;
+        border-radius: 5px;
+        white-space: nowrap;
+        font-size: 12px;
+    }
+
+    .quick-stats {
+        margin-top: 40px;
+    }
+
+    .kebab-menu {
+        position: relative;
+    }
+
+    .kebab-menu .dropdown-menu {
+        right: 0;
+        left: auto;
+        background-color: rgba(0, 0, 0, 0.7);
+        border: none;
+    }
+
+    .kebab-menu .dropdown-item {
+        color: white;
+    }
+
+    .live-feed-header {
+        background-color: #F7F9FA; /* Light grey background */
+        padding: 35px 30px 15px;
+        margin: -30px -30px 20px;
+        display: flex;
+        align-items: center; /* Align items horizontally */
+        gap: 15px; /* Space between icon and text */
+    }
+
+    .live-feed-icon {
+        background: white;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 50px;
+        height: 50px;
+        border-radius: 5px; /* Small square rounded card */
+        font-size: 24px;
+    }
+
+    .live-feed-icon i {
+        font-size: 24px;
+        background: -webkit-linear-gradient(45deg, #7d2ae8, orange);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .live-feed-header h4 {
+        color: #495057;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 0;
+    }
+
+    .live-feed-header p {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: grey;
+        margin: 5px 0 0 0;
+    }
+
+    .fullscreen-enabled .video-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1000;
+        background: black;
+    }
+
+    .fullscreen-enabled .video-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+
+    .fullscreen-suggestions-container {
+        position: absolute;
+        top: 20px;
+        right: -320px;
+        width: 300px;
+        background-color: rgba(255, 255, 255, 0.9);
+        border-radius: 15px;
+        z-index: 1001;
+        opacity: 0;
+        transition: opacity 0.3s ease, right 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        padding: 20px;
+    }
+
+    .fullscreen-enabled .fullscreen-suggestions-container {
+        opacity: 1;
+    }
+
+    .fullscreen-suggestions-header {
+        padding: 10px;
+        background-color: #e9ecef;
+ 
+        border-radius: 15px ;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .fullscreen-suggestions-content {
+        padding: 10px;
+        overflow-y: auto;
+        flex: 1;
+    }
+
+    .fullscreen-toggle {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        z-index: 1002;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: opacity 0.3s ease, right 0.3s ease;
+    }
+
+    .fullscreen-enabled .fullscreen-toggle {
+        display: flex;
+        opacity: 1;
+    }
+
+    @media (max-width: 768px) {
+        .live-feed-layout {
+            flex-direction: column;
+        }
+
+        .video-container {
+            margin-right: 0;
+            margin-bottom: 20px;
+            height: auto;
+        }
+
+        .suggestions-container {
+            max-height: none;
+        }
+    }
+</style>
+
+<div class="live-feed-header">
+    <div class="live-feed-icon"><i class="fas fa-video"></i></div>
+    <div>
+        <h4>Live Feed</h4>
+        <p>Monitor real-time student emotions during live sessions.</p>
+    </div>
+</div>
+
+<div class="live-feed-layout">
+    <div class="video-container controls-visible">
+        <img id="videoFeed" class="img-fluid" alt="Video Feed" src="{{ url_for('static', filename='images/cameraisoff.png') }}">
+        <div class="controls">
+            <div class="controls-left">
+                <button id="startButton" class="btn btn-success" data-tooltip="Start Live Feed">
+                    <i class="fas fa-play"></i>
+                </button>
+                <button id="stopButton" class="btn btn-danger" data-tooltip="Stop Live Feed">
+                    <i class="fas fa-stop"></i>
+                </button>
+            </div>
+            <div class="controls-right">
+                <button id="saveStatsButton" class="btn btn-primary" data-tooltip="Save Stats to Historical Data">
+                    <i class="fas fa-save"></i>
+                </button>
+                <button id="resetStatsButton" class="btn btn-warning" data-tooltip="Reset Stats">
+                    <i class="fas fa-redo"></i>
+                </button>
+                <div class="kebab-menu dropdown">
+                    <button class="btn btn-secondary" type="button" id="kebabMenuButton" data-bs-toggle="dropdown" aria-expanded="false" data-tooltip="Settings">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="kebabMenuButton">
+                        <li><a class="dropdown-item" href="#" onclick="switchCamera(0)">Default Camera</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="switchCamera(1)">Phone Camera</a></li>
+                        <!-- Add more camera options as needed -->
+                    </ul>
+                </div>
+                <button id="fullscreenButton" class="btn btn-secondary" data-tooltip="Fullscreen">
+                    <i class="fas fa-expand"></i>
+                </button>
+            </div>
+        </div>
+        <div class="fullscreen-suggestions-container">
+            <div class="fullscreen-suggestions-header">
+                <h5><i class="fas fa-lightbulb"></i> Teaching Suggestions</h5>
+            </div>
+            <div class="fullscreen-suggestions-content" id="fullscreenSuggestions">
+                <!-- Suggestions will be dynamically inserted here -->
+            </div>
+        </div>
+        <button id="fullscreenToggle" class="fullscreen-toggle" style="background-color: purple;">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+    </div>
+    <div class="suggestions-container shadow">
+        <div class="suggestions-header">
+            <h3><i class="fas fa-lightbulb"></i> Teaching Suggestions</h3>
+            <p>These are general suggestions based on highest detected emotions during class sessions:</p><br>
+        </div>
+        <div class="suggestions-content" id="suggestions">
+            <!-- Suggestions will be dynamically inserted here -->
+        </div>
+    </div>
+</div>
+
+<div class="quick-stats mt-4">
+    <h4 style="color: #37319e;"><i class="fas fa-chart-bar"></i> Current Emotion Stats</h4>
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th><i class="fas fa-smile"></i> Emotion</th>
+                <th><i class="fas fa-percentage"></i> Distribution (%)</th>
+                <th><i class="fas fa-tachometer-alt"></i> Intensity</th>
+                <th><i class="fas fa-clock"></i> Last Updated</th>
+            </tr>
+        </thead>
+        <tbody id="emotionStats">
+            <!-- Data rows will be dynamically inserted here -->
+        </tbody>
+    </table>
+</div>
+
+<script>
+document.getElementById('startButton').onclick = function() {
+    const videoImage = document.getElementById('videoFeed');
+    videoImage.src = "{{ url_for('video_feed') }}";
+    updateStatsInterval = setInterval(updateEmotionStats, 1000);
+    document.querySelector('.video-container').classList.remove('controls-visible');
+    document.querySelector('.video-container').classList.add('controls-hidden');
+};
+
+document.getElementById('stopButton').onclick = function() {
+    const videoImage = document.getElementById('videoFeed');
+    videoImage.src = "https://via.placeholder.com/1280x720?text=Camera+is+off";
+    clearInterval(updateStatsInterval);
+    fetch('/stop_video')
+        .then(response => response.text())
+        .then(data => console.log(data));
+    document.querySelector('.video-container').classList.add('controls-visible');
+    document.querySelector('.video-container').classList.remove('controls-hidden');
+};
+
+document.getElementById('saveStatsButton').onclick = function() {
+    fetch('/save_emotion_stats', { method: 'POST' })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Saved data:', data);
+        alert('Emotion stats saved successfully!');
+    })
+    .catch(error => console.log('Error saving stats:', error));
+};
+
+document.getElementById('resetStatsButton').onclick = function() {
+    fetch('/reset_emotion_stats', { method: 'POST' })
+    .then(response => response.json())
+    .then(data => {
+        console.log(data.status);
+        document.getElementById('emotionStats').innerHTML = "";
+        document.getElementById('suggestions').innerHTML = "";
+    })
+    .catch(error => console.log('Error:', error));
+};
+
+document.getElementById('fullscreenButton').onclick = function() {
+    const videoContainer = document.querySelector('.video-container');
+    const suggestionsContainer = document.querySelector('.fullscreen-suggestions-container');
+    const toggleButton = document.getElementById('fullscreenToggle');
+    if (!document.fullscreenElement) {
+        if (videoContainer.requestFullscreen) {
+            videoContainer.requestFullscreen();
+        } else if (videoContainer.mozRequestFullScreen) { /* Firefox */
+            videoContainer.mozRequestFullScreen();
+        } else if (videoContainer.webkitRequestFullscreen) { /* Chrome, Safari and Opera */
+            videoContainer.webkitRequestFullscreen();
+        } else if (videoContainer.msRequestFullscreen) { /* IE/Edge */
+            videoContainer.msRequestFullscreen();
+        }
+        videoContainer.classList.add('fullscreen-enabled');
+        suggestionsContainer.style.right = '-320px';
+        toggleButton.style.display = 'flex';
+        toggleButton.innerHTML = '<i class="fas fa-arrow-left"></i>';
+        toggleButton.style.right = '20px';
+    } else {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        } else if (document.mozCancelFullScreen) { /* Firefox */
+            document.mozCancelFullScreen();
+        } else if (document.webkitExitFullscreen) { /* Chrome, Safari and Opera */
+            document.webkitExitFullscreen();
+        } else if (document.msExitFullscreen) { /* IE/Edge */
+            document.msExitFullscreen();
+        }
+        videoContainer.classList.remove('fullscreen-enabled');
+        suggestionsContainer.style.right = '-320px';
+        toggleButton.style.display = 'none';
+    }
+};
+
+document.getElementById('fullscreenToggle').onclick = function() {
+    const fullscreenSuggestionsContainer = document.querySelector('.fullscreen-suggestions-container');
+    const toggleButton = document.getElementById('fullscreenToggle');
+    if (fullscreenSuggestionsContainer.style.right === '20px') {
+        fullscreenSuggestionsContainer.style.right = '-320px';
+        toggleButton.innerHTML = '<i class="fas fa-arrow-left"></i>';
+        toggleButton.style.right = '20px';
+    } else {
+        fullscreenSuggestionsContainer.style.right = '20px';
+        toggleButton.innerHTML = '<i class="fas fa-arrow-right"></i>';
+        toggleButton.style.right = '340px';
+    }
+};
+
+function switchCamera(cameraIndex) {
+    fetch('/switch_camera', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ cameraIndex: cameraIndex })
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log(data.status);
+        alert('Camera switched to ' + (cameraIndex == 0 ? 'Default Camera' : 'Phone Camera') + '!');
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+function updateEmotionStats() {
+    fetch('/emotion_stats')
+    .then(response => response.json())
+    .then(data => {
+        let statsBody = document.getElementById('emotionStats');
+        statsBody.innerHTML = "";
+        let suggestionsBody = document.getElementById('suggestions');
+        let fullscreenSuggestionsBody = document.getElementById('fullscreenSuggestions');
+        suggestionsBody.innerHTML = "";
+        fullscreenSuggestionsBody.innerHTML = "";
+        let maxEmotion = { emotion: "", value: 0 };
+
+        Object.keys(data).forEach(emotion => {
+            let stat = data[emotion];
+            let distribution = (stat.count / Object.values(data).reduce((acc, curr) => acc + curr.count, 0) * 100).toFixed(2);
+            let now = new Date();
+            let formattedDate = now.toLocaleDateString() + ' ' + now.toLocaleTimeString();
+            let row = `<tr>
+                <td>${emotion}</td>
+                <td>${distribution}%</td>
+                <td>${stat.average_intensity.toFixed(2)}</td>
+                <td>${formattedDate}</td>
+            </tr>`;
+            statsBody.innerHTML += row;
+
+            // Calculate weighted score based on distribution and intensity
+            let weightedScore = distribution * stat.average_intensity;
+            if (weightedScore > maxEmotion.value) {
+                maxEmotion = { emotion: emotion, value: weightedScore };
+            }
+        });
+
+        const suggestions = {
+            "Angry": [
+                "Engagement: Incorporate more engaging or varied activities to capture students' attention and reduce frustration.",
+                "Revisiting Material: Consider revisiting the teaching approach to certain topics that may be causing frustration.",
+                "Classroom Management: Implement techniques to calm the classroom, such as deep breathing exercises or a short break.",
+                "Open Dialogue: Encourage students to express their frustrations and address any issues they raise."
+            ],
+            "Disgust": [
+                "Content Review: Review and adjust teaching materials or topics that may be causing a negative reaction.",
+                "Respectful Discussion: Foster a respectful and open classroom environment where students can voice their concerns and discuss what bothers them.",
+                "Relevance: Ensure that the material is relevant and interesting to the students to reduce feelings of disgust or disinterest."
+            ],
+            "Fear": [
+                "Supportive Environment: Create a supportive and reassuring classroom environment.",
+                "Pacing: Slow down the pace of teaching to allow students to grasp the material better.",
+                "Encouragement: Encourage students to ask questions and express their concerns.",
+                "Reassurance: Provide reassurance and positive reinforcement to build confidence."
+            ],
+            "Happy": [
+                "Reinforce Strategies: Continue with the current teaching methods that are effective.",
+                "Positive Reinforcement: Use positive reinforcement to maintain a positive learning environment.",
+                "Encouragement: Encourage students to participate and share their positive experiences.",
+                "Peer Interaction: Promote group activities and peer interaction to sustain a happy and engaging atmosphere."
+            ],
+            "Neutral": [
+                "Engagement Techniques: Introduce more interactive and engaging teaching techniques to shift the mood to a more positive state.",
+                "Check-in: Regularly check in with students to ensure they understand the material and are not feeling disengaged.",
+                "Variety: Add variety to the teaching methods to capture students' interest.",
+                "Encouragement: Encourage more active participation and engagement from students."
+            ],
+            "Sad": [
+                "Empathy: Show empathy and provide support to students who may be feeling down.",
+                "Boost Morale: Integrate activities that boost morale and engagement, such as games or group projects.",
+                "Support: Offer additional help or resources for students who may be struggling.",
+                "Positive Environment: Foster a positive and supportive classroom environment."
+            ],
+            "Surprise": [
+                "Leveraging Surprise: Use the element of surprise to introduce new and exciting concepts or activities.",
+                "Engagement: Maintain high engagement levels with unexpected, fun, and educational activities.",
+                "Curiosity: Stimulate students' curiosity and encourage them to explore new topics.",
+                "Encouragement: Encourage students to ask questions and share their thoughts on surprising or new information."
+            ]
+        };
+
+        if (maxEmotion.emotion) {
+            suggestions[maxEmotion.emotion].forEach(suggestion => {
+                const suggestionElement = document.createElement('div');
+                suggestionElement.className = `suggestion ${maxEmotion.emotion.toLowerCase()}`;
+                suggestionElement.innerHTML = `<strong>${maxEmotion.emotion}:</strong> ${suggestion}`;
+                suggestionsBody.appendChild(suggestionElement);
+                fullscreenSuggestionsBody.appendChild(suggestionElement.cloneNode(true));
+            });
+        }
+    })
+    .catch(error => console.log('Error:', error));
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelector('.video-container').classList.add('controls-visible');
+});
+</script>
+{% endblock %}

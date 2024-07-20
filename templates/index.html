@@ -1,0 +1,410 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .adjustment-notes,
+    .emotion-scores-card {
+        background-color: #f8f9fa; /* Light gray background */
+        border: 1px solid #dee2e6; /* Slight border for emphasis */
+        padding: 20px; /* Padding around the text for better readability */
+        border-radius: 10px !important; /* More rounded corners */
+        margin-top: 10px; /* Reduced space above the container */
+        overflow: hidden; /* Ensure child elements respect border radius */
+    }
+
+    .adjustment-notes h4,
+    .emotion-scores-card h4 {
+        color: #7d2ae8; /* Dark blue color for heading */
+        display: inline-block; /* Display inline to align with the tooltip */
+    }
+
+    .adjustment-notes ul {
+        list-style-type: none; /* Removes default list styling */
+        padding: 0;
+    }
+
+    .adjustment-notes li {
+        margin-bottom: 10px; /* Space between items */
+        line-height: 1.5; /* More readable line spacing */
+    }
+
+    .dashboard-header {
+        background-color: #F7F9FA; /* Light grey background */
+        padding: 35px 30px 15px;
+        margin: -30px -30px 20px;
+        display: flex;
+        align-items: center; /* Align items horizontally */
+        gap: 15px; /* Space between icon and text */
+  
+    }
+
+    .dashboard-icon {
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 50px;
+        height: 50px;
+        border-radius: 5px; /* Small square rounded card */
+        font-size: 24px;
+    }
+
+    .dashboard-icon i {
+        font-size: 24px;
+        background: -webkit-linear-gradient(45deg, #7d2ae8, orange);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .dashboard-header h4 {
+        color: #495057;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 0;
+    }
+
+    .dashboard-header p {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: grey;
+        margin: 5px 0 0 0;
+    }
+
+    .chart-container {
+        text-align: center;
+    }
+
+    .chart-container .card-header {
+        font-weight: bold;
+        text-align: left;
+        width: 100%;
+        border-bottom: 2px solid #dee2e6; /* Border bottom for card headers */
+        padding-bottom: 10px;
+        margin-bottom: 10px;
+    }
+
+    .card {
+        text-align: left;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        border-radius: 10px !important; /* More rounded corners and overriding Bootstrap */
+        overflow: hidden; /* Ensure child elements respect border radius */
+    }
+
+    .chart-container canvas {
+        max-width: 100%;
+        max-height: 250px; /* Adjusted to match the bar chart size */
+    }
+
+    .progress-container {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .progress-label {
+        width: 100px; /* Fixed width for labels */
+        text-align: right;
+        margin-right: 10px;
+    }
+
+    .suggestion {
+        margin-bottom: 15px;
+        padding: 10px;
+        background-color: #e9ecef;
+        border-radius: 5px;
+        border-left: 5px solid;
+    }
+
+    .suggestion.angry {
+        border-color: #ff0000;
+    }
+
+    .suggestion.disgust {
+        border-color: #008000;
+    }
+
+    .suggestion.fear {
+        border-color: #0000ff;
+    }
+
+    .suggestion.happy {
+        border-color: #ffff00;
+    }
+
+    .suggestion.neutral {
+        border-color: #808080;
+    }
+
+    .suggestion.sad {
+        border-color: #800080;
+    }
+
+    .suggestion.surprise {
+        border-color: #ffa500;
+    }
+
+    .tooltip-icon {
+        color: #7d2ae8;
+        margin-left: 5px;
+        cursor: pointer;
+    }
+</style>
+
+<div class="dashboard-header">
+    <div class="dashboard-icon"><i class="fas fa-tachometer-alt"></i></div>
+    <div>
+        <h4>Dashboard</h4>
+        <p>Welcome to the Facial Emotion Analysis Student Feedback Dashboard.</p>
+    </div>
+</div>
+
+<div class="row chart-container">
+    <div class="col-md-6">
+        <div class="card shadow-sm p-0 pt-2" style="width:100%;">
+            <div class="card-header mb-3" style="background-color: white;">
+                EMOTION DISTRIBUTION
+                <i style="color: grey; font-size: medium;" class="fas fa-info-circle tooltip-icon" data-bs-toggle="tooltip" data-bs-placement="top" title="Shows the distribution of detected emotions in percentage."></i>
+            </div>
+            <canvas class=" mb-3" id="pieChart"></canvas>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow-sm p-0 pt-2" style="width:100%;">
+            <div class="card-header mb-3" style="background-color: white;">
+                EMOTION INTENSITY
+                <i style="color: grey; font-size: medium;" class="fas fa-info-circle tooltip-icon" data-bs-toggle="tooltip" data-bs-placement="top" title="Shows the average intensity of detected emotions."></i>
+            </div>
+            <canvas class="p-2 mb-3" id="barGraph"></canvas>
+        </div>
+    </div>
+</div>
+<div class="row mt-2">
+    <div class="col-md-6">
+        <div class="card shadow-sm p-0 pt-2 mt-3">
+            <div class="card-header mb-3" style="background-color: white; font-weight: bold;">
+                EMOTION SCORE
+                <i style="color: grey; font-size: medium;" class="fas fa-info-circle tooltip-icon" data-bs-toggle="tooltip" data-bs-placement="top" title="The emotion score is calculated using a combination of the distribution and intensity of detected emotions. The final score is computed by multiplying the distribution percentage by the average intensity."></i>
+            </div>
+            <canvas class="p-2 mb-3" id="horizontalBarChart"></canvas>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow-sm p-0 pt-2 mt-3">
+            <div class="card-header mb-3" style="background-color: white; font-weight: bold;">
+                TEACHING ADJUSTMENT SUGGESTIONS
+                <i style="color: grey; font-size: medium;" class="fas fa-info-circle tooltip-icon" data-bs-toggle="tooltip" data-bs-placement="top" title="Provides suggestions to adjust teaching strategies based on detected emotions."></i>
+            </div>
+            <p class="m-3"><strong style="color: #495057;">Note:</strong> These are general suggestions based on detected emotions during class sessions:</p>
+            <ul class="p-3" style="list-style: none;" id="suggestions-list">
+                <!-- Dynamic suggestions will be inserted here -->
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const emotionColors = {
+            "Angry": "#FF6961",    // Pastel Red
+            "Disgust": "#77DD77",  // Pastel Green
+            "Fear": "#779ECB",     // Pastel Blue
+            "Sad": "#CFCFC4",      // Pastel Grey
+            "Happy": "#FDFD96",    // Pastel Yellow
+            "Surprise": "#FFB347", // Pastel Orange
+            "Neutral": "#AEC6CF"   // Pastel Cyan
+        };
+
+        const ctxPie = document.getElementById('pieChart').getContext('2d');
+        const ctxBar = document.getElementById('barGraph').getContext('2d');
+        const ctxHorizontalBar = document.getElementById('horizontalBarChart').getContext('2d');
+
+        function fetchData() {
+            fetch('/emotion_stats')
+            .then(response => response.json())
+            .then(data => {
+                renderCharts(data);
+                updateSuggestions(data);
+                updateEmotionScores(data);
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function renderCharts(data) {
+            const emotions = Object.keys(data);
+            const counts = emotions.map(emotion => data[emotion].count);
+            const intensities = emotions.map(emotion => data[emotion].average_intensity);
+            const backgroundColors = emotions.map(emotion => emotionColors[emotion] || 'black');
+            const borderColors = backgroundColors.map(color => Chart.helpers.color(color).alpha(1).rgbString());
+
+            const pieData = {
+                labels: emotions,
+                datasets: [{
+                    label: 'Emotion Distribution',
+                    data: counts,
+                    backgroundColor: backgroundColors,
+                    hoverOffset: 4
+                }]
+            };
+
+            const barData = {
+                labels: emotions,
+                datasets: [{
+                    label: 'Emotion Intensity',
+                    data: intensities,
+                    backgroundColor: backgroundColors.map(color => Chart.helpers.color(color).alpha(0.7).rgbString()), // Adjusted opacity to 0.7
+                    borderColor: borderColors,
+                    borderWidth: 1
+                }]
+            };
+
+            const pieConfig = {
+                type: 'doughnut',
+                data: pieData,
+                options: {
+                    responsive: true,
+                    cutout: '80%', // Adjust this value to make the doughnut thinner
+                    plugins: {
+                        legend: {
+                            position: 'bottom', // Position the legend at the bottom
+                            labels: {
+                                usePointStyle: true, // Use point style for legend items
+                                pointStyle: 'circle' // Set the point style to circle
+                            }
+                        }
+                    }
+                }
+            };
+
+            const barConfig = {
+                type: 'bar',
+                data: barData,
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    },
+                    responsive: true
+                }
+            };
+
+            const horizontalBarData = {
+                labels: emotions,
+                datasets: [{
+                    label: 'Emotion Score',
+                    data: emotions.map(emotion => data[emotion].average_intensity * (data[emotion].count / Object.values(data).reduce((acc, curr) => acc + curr.count, 0)) * 100),
+                    backgroundColor: backgroundColors,
+                    borderColor: borderColors,
+                    borderWidth: 1
+                }]
+            };
+
+            const horizontalBarConfig = {
+                type: 'bar',
+                data: horizontalBarData,
+                options: {
+                    indexAxis: 'y', // Switch the axis to make it horizontal
+                    scales: {
+                        x: {
+                            beginAtZero: true
+                        }
+                    },
+                    responsive: true
+                }
+            };
+
+            new Chart(ctxPie, pieConfig);
+            new Chart(ctxBar, barConfig);
+            new Chart(ctxHorizontalBar, horizontalBarConfig);
+        }
+
+        function updateSuggestions(data) {
+            const suggestionsList = document.getElementById('suggestions-list');
+            suggestionsList.innerHTML = '';
+
+            const emotionLevels = {
+                "Angry": data.Angry?.average_intensity || 0,
+                "Disgust": data.Disgust?.average_intensity || 0,
+                "Fear": data.Fear?.average_intensity || 0,
+                "Sad": data.Sad?.average_intensity || 0,
+                "Happy": data.Happy?.average_intensity || 0,
+                "Surprise": data.Surprise?.average_intensity || 0,
+                "Neutral": data.Neutral?.average_intensity || 0
+            };
+
+            const totalCount = Object.values(data).reduce((acc, { count }) => acc + count, 0);
+            const emotionDistribution = Object.entries(data).reduce((acc, [emotion, { count }]) => {
+                acc[emotion] = (count / totalCount) * 100;
+                return acc;
+            }, {});
+
+            let maxEmotion = { emotion: "", value: 0, score: 0 };
+
+            Object.keys(data).forEach(emotion => {
+                let stat = data[emotion];
+                let distribution = (stat.count / totalCount * 100).toFixed(2);
+                let weightedScore = distribution * stat.average_intensity;
+
+                if (weightedScore > maxEmotion.value) {
+                    maxEmotion = { emotion: emotion, value: weightedScore, score: weightedScore.toFixed(2) };
+                }
+            });
+
+            const suggestions = {
+                "Angry": "Consider incorporating more engaging or varied activities, or revisiting the teaching approach to certain topics that may be causing frustration.",
+                "Disgust": "Address the cause of disgust and encourage respectful discussion. Adjust the teaching materials if necessary.",
+                "Fear": "Provide a supportive environment and possibly slow down the pace of teaching. Encourage questions and address concerns.",
+                "Happy": "These indicators suggest that current methods are effective. Encourage continuation of these strategies to maintain a positive learning environment.",
+                "Neutral": "Encourage more participation and engagement to shift the mood to a more positive state.",
+                "Sad": "Show empathy and provide support. Consider integrating activities that boost morale and engagement.",
+                "Surprise": "Leverage the surprise to introduce new and exciting concepts or activities to keep the engagement high."
+            };
+
+            if (maxEmotion.emotion) {
+                const suggestionElement = document.createElement('li');
+                suggestionElement.className = `suggestion ${maxEmotion.emotion.toLowerCase()}`;
+                suggestionElement.innerHTML = `<strong>${maxEmotion.emotion}:</strong> ${suggestions[maxEmotion.emotion]} <span class="badge bg-secondary" data-bs-toggle="tooltip" title="This score indicates the highest combined effect of emotion distribution and intensity."> Score: ${maxEmotion.score}</span>`;
+                suggestionsList.appendChild(suggestionElement);
+
+                // Initialize tooltips
+                var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                    return new bootstrap.Tooltip(tooltipTriggerEl);
+                });
+            }
+        }
+
+        function updateEmotionScores(data) {
+            const emotionScores = document.getElementById('emotionScores');
+            emotionScores.innerHTML = '';
+
+            Object.keys(data).forEach(emotion => {
+                const score = data[emotion].average_intensity * (data[emotion].count / Object.values(data).reduce((acc, curr) => acc + curr.count, 0)) * 100;
+                const progressBar = document.createElement('div');
+                progressBar.className = 'progress-container';
+                progressBar.innerHTML = `
+                    <div class="progress-label">${emotion}</div>
+                    <div class="progress flex-grow-1">
+                        <div class="progress-bar" role="progressbar" style="width: ${score}%; background-color: ${emotionColors[emotion]};" aria-valuenow="${score}" aria-valuemin="0" aria-valuemax="100">${score.toFixed(2)}%</div>
+                    </div>
+                `;
+                emotionScores.appendChild(progressBar);
+            });
+        }
+
+        fetchData();  // Initial call to fetch data and render charts
+
+        // Initialize all tooltips on the page
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+</script>
+{% endblock %}

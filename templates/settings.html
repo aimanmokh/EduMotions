@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h3 class="mt-4" style="color: orange;"><i class="fas fa-cog"></i> Settings</h3>
+<div class="container mt-3">
+    <div class="row flex-lg-nowrap">
+        <div class="col-12 col-lg-auto mb-3" style="width: 230px;">
+            <div class="card p-3">
+                <div class="e-navlist e-navlist--active-bg">
+                    <ul class="nav">
+                        <li class="nav-item"><a class="nav-link px-2" href="{{ url_for('profile_settings') }}"><i class="fa fa-fw fa-user-gear mr-1"></i><span> Account Settings</span></a></li>
+                        <li class="nav-item"><a class="nav-link px-2 active" href="{{ url_for('settings') }}"><i class="fa fa-fw fa-cog mr-1"></i><span> General</span></a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col">
+            <div class="row">
+                <div class="col mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="e-profile">
+                                <ul class="nav nav-tabs">
+                                    <li class="nav-item"><a href="" class="active nav-link">Camera Settings</a></li>
+                                </ul>
+                                <div class="tab-content pt-3">
+                                    <div class="tab-pane active">
+                                        <form class="form" id="settingsForm" novalidate="">
+                                            <div class="row">
+                                                <div class="col">
+                                                    <div class="form-group">
+                                                        <label for="cameraSelect" class="form-label"><i class="fas fa-camera"></i> Select Camera</label>
+                                                        <select class="form-control" id="cameraSelect" name="cameraIndex" onchange="switchCamera(this.value)">
+                                                            <option value="0">Default Camera</option>
+                                                            <option value="1">Phone Camera</option>
+                                                            <!-- Add more options based on how many cameras are available -->
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-3 mb-3">
+            <div class="card mb-3" style="max-width: 200px;">
+                <div class="card-body">
+                    <div class="px-xl-3">
+                        <button class="btn btn-secondary btn-block" style="width: 100%;" onclick="location.href='{{ url_for('logout') }}'">
+                            <i class="fa fa-sign-out"></i>
+                            <span>Logout</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function switchCamera(cameraIndex) {
+    fetch('/switch_camera', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ cameraIndex: cameraIndex })
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log(data.status);
+        alert('Camera switched to ' + (cameraIndex == 0 ? 'Default Camera' : 'Phone Camera') + '!');
+    })
+    .catch(error => console.error('Error:', error));
+}
+</script>
+{% endblock %}
